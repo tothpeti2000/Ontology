@@ -6,9 +6,11 @@
   "configurations": [
     {
       "type": "java",
-      "name": "Launch Current File",
+      "name": "Launch IndexSearch",
       "request": "launch",
-      "mainClass": "${file}"
+      "mainClass": "org.bme.mit.iir.IndexSearch",
+      "projectName": "informaciokereses",
+      "args": "Hello Hi unique word"
     },
     {
       "type": "java",
