@@ -12,11 +12,11 @@
     },
     {
       "type": "java",
-      "name": "Launch Ex1CreateIndex",
+      "name": "Launch IndexCreator",
       "request": "launch",
-      "mainClass": "org.bme.mit.iir.Ex1CreateIndex",
+      "mainClass": "org.bme.mit.iir.IndexCreator",
       "projectName": "informaciokereses",
-      "args": "corpus output.txt"
+      "args": "test-corpus index.txt"
     },
     {
       "type": "java",
