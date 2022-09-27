@@ -6,11 +6,18 @@
   "configurations": [
     {
       "type": "java",
+      "name": "Launch Reasoning",
+      "request": "launch",
+      "mainClass": "org.bme.mit.iir.Reasoning",
+      "projectName": "informaciokereses"
+    },
+    {
+      "type": "java",
       "name": "Launch IndexSearch",
       "request": "launch",
       "mainClass": "org.bme.mit.iir.IndexSearch",
       "projectName": "informaciokereses",
-      "args": "Hello Hi unique word"
+      "args": "konfiguráció"
     },
     {
       "type": "java",
@@ -18,14 +25,8 @@
       "request": "launch",
       "mainClass": "org.bme.mit.iir.IndexCreator",
       "projectName": "informaciokereses",
-      "args": "test-corpus index.txt"
-    },
-    {
-      "type": "java",
-      "name": "Launch ReasoningExample",
-      "request": "launch",
-      "mainClass": "org.bme.mit.iir.ReasoningExample",
-      "projectName": "informaciokereses"
+      // "args": "corpus index.txt"
+      "args": "test/corpus test/index.txt"
     }
   ]
 }

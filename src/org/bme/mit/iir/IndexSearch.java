@@ -2,12 +2,17 @@ package org.bme.mit.iir;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
+import org.semanticweb.owlapi.model.OWLClass;
 
 public class IndexSearch {
     final IndexCreator indexCreator;
@@ -20,7 +25,7 @@ public class IndexSearch {
         sortedFileWords = new LinkedHashMap<>();
     }
 
-    public void collectFileWords(String[] words) {
+    public void collectFileWords(List<String> words) {
         for (String word : words) {
             Map<File, Integer> wordOccurrences = indexCreator.getOccurences(word);
 
@@ -63,13 +68,36 @@ public class IndexSearch {
         for (File file : sortedFileWords.keySet()) {
             System.out.println(file);
         }
+
+        System.out.println("Total matches: " + sortedFileWords.size());
     }
 
     public static void main(String args[]) throws IOException, ClassNotFoundException {
-        File indexFile = new File("index.txt");
+        File indexFile = new File("test/index.txt");
         IndexSearch indexSearch = new IndexSearch(indexFile);
 
-        indexSearch.collectFileWords(args);
+        List<String> argList = new ArrayList<>(Arrays.asList(args));
+        List<String> queryKeys = new ArrayList<>(argList);
+
+        // Reasoning reasoning = new Reasoning(
+        // "pc_shop.owl");
+
+        // for (String arg : argList) {
+        // Set<OWLClass> descendants = reasoning.getSubClasses(arg, false);
+
+        // for (OWLClass owlClass : descendants) {
+        // if (!owlClass.isBuiltIn()) {
+        // queryKeys.add(owlClass.getIRI().getFragment());
+
+        // Set<String> labels = reasoning.getClassAnnotations(owlClass);
+        // queryKeys.addAll(new ArrayList<>(labels));
+        // }
+        // }
+        // }
+
+        // System.out.println("Query keys after query expansion: " + queryKeys);
+
+        indexSearch.collectFileWords(queryKeys);
         indexSearch.sortFileWords();
         indexSearch.printMatchFiles();
     }

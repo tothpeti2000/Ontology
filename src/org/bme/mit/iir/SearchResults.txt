@@ -1,0 +1,7 @@
+PC  44
+Notebook    34
+alkatrész   0
+HDD     2
+SSD     11
+laptop  0
+konfiguráció    1

@@ -22,7 +22,7 @@ import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import org.semanticweb.owlapi.reasoner.OWLReasonerRuntimeException;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
-public class ReasoningExample {
+public class Reasoning {
 
     public static final String PCSHOP_ONTOLOGY_FNAME = "pc_shop.owl";
     public static final String PCSHOP_BASE_URI = "http://mit.bme.hu/ontologia/iir_labor/pc_shop.owl#";
@@ -33,10 +33,7 @@ public class ReasoningExample {
     OWLReasoner reasoner;
     OWLDataFactory factory;
 
-    public ReasoningExample(String ontologyFilename) {
-        // Hozzunk létre egy OntologyManager példányt. Többek között ez tartja
-        // nyilván, hogy mely ontológiákat nyitottuk meg és azok hogyan
-        // hivatkoznak egymásra.
+    public Reasoning(String ontologyFilename) {
         manager = OWLManager.createOWLOntologyManager();
 
         // Töltsük be az ontológiát egy fizikai címről.
@@ -45,40 +42,37 @@ public class ReasoningExample {
         // Erre ontológiák közötti függőségek (import) kialakításánál van
         // szükség.]
         ontology = null;
+
         try {
             ontology = manager.loadOntologyFromOntologyDocument(
                     new File(ontologyFilename));
         } catch (Exception e) {
-            System.err.println("Hiba az ontológia betöltése közben:\n\t"
+            System.err.println("Error while loading the ontology:\n\t"
                     + e.getMessage());
+
             System.exit(-1);
         }
-        System.out.println("Ontológia betöltve: " +
+
+        System.out.println("Ontology loaded: " +
                 manager.getOntologyDocumentIRI(ontology));
 
-        // Létrehozzuk a következtetőgép egy példányát. Mi most a HermiT-et
-        // használjuk, de az OWL API univerzális, másik következtető
-        // használatához csak a Factory osztály nevét kellene kicserélni.
-
         OWLReasonerFactory reasonerFactory = new org.semanticweb.HermiT.Reasoner.ReasonerFactory();
-        //
-        // Hozzunk létre egy következtetőgépet, betöltve az ontológiát.
-        // [Ha vannak az ontológiának függőségei, azok automatikusan
-        // betöltődnek a manager segítségével.]
         reasoner = reasonerFactory.createReasoner(ontology);
 
         try {
-            // Ha az ontológia nem konzisztens, lépjünk ki.
             if (!reasoner.isConsistent()) {
-                System.err.println("Az ontológia nem konzisztens!");
+                System.err.println("The ontology isn't consistent!");
 
-                Node<OWLClass> incClss = reasoner.getUnsatisfiableClasses();
-                System.err.println("A következő osztályok nem konzisztensek: "
-                        + Util.join(incClss.getEntities(), ", ") + ".");
+                Node<OWLClass> inconsistentClasses = reasoner.getUnsatisfiableClasses();
+
+                System.err.println("The following classes aren't consistent: "
+                        + Util.join(inconsistentClasses.getEntities(), ", ") + ".");
+
                 System.exit(-1);
             }
         } catch (OWLReasonerRuntimeException e) {
-            System.err.println("Hiba a következtetőben: " + e.getMessage());
+            System.err.println("A reasoning error occurred: " + e.getMessage());
+
             System.exit(-1);
         }
 
@@ -97,34 +91,38 @@ public class ReasoningExample {
     // Ez a függvény a fenti halmazt "kilapítva" adja vissza:
     // { Kutya, Eb, Macska, Cica, Ló }
     public Set<OWLClass> getSubClasses(String className, boolean direct) {
-        // Létrehozzuk az osztály URI-ját a base URI alapján.
-        IRI clsIRI = IRI.create(PCSHOP_BASE_URI + className);
+        IRI classIRI = IRI.create(PCSHOP_BASE_URI + className);
         // Ellenőrizzük, hogy az osztály szerepel-e az ontológiában.
         // (Ha olyan dologra kérdezünk rá a következtetővel, ami nem szerepel az
         // ontológiában, az nem vezet hibához az OWL nyílt világ feltételezése
         // miatt.)
-        if (!ontology.containsClassInSignature(clsIRI)) {
-            System.out.println("Nincs ilyen osztály az ontológiában: \"" +
+        if (!ontology.containsClassInSignature(classIRI)) {
+            System.out.println("There's no such class in the ontology: \"" +
                     className + "\"");
+
             return Collections.emptySet();
         }
-        // Létrehozzuk az osztály egy példányát és lekérdezzük a leszármazottait.
-        OWLClass cls = factory.getOWLClass(clsIRI);
-        NodeSet<OWLClass> subClss;
+
+        OWLClass owlClass = factory.getOWLClass(classIRI);
+        NodeSet<OWLClass> subClasses;
+
         try {
-            subClss = reasoner.getSubClasses(cls, direct);
+            subClasses = reasoner.getSubClasses(owlClass, direct);
         } catch (OWLReasonerRuntimeException e) {
-            System.err.println("Hiba az alosztályok következtetése közben: "
+            System.err.println("An error occurred while reasoning the subclasses: "
                     + e.getMessage());
+
             return Collections.emptySet();
         }
         // Kiírjuk az eredményt, az ekvivalens osztályokat
         // egyenlőségjellel elválasztva.
-        System.out.println("Az \"" + className + "\" osztály leszármazottai:");
-        for (Node<OWLClass> subCls : subClss.getNodes()) {
-            System.out.println("  - " + Util.join(subCls.getEntities(), " = "));
+        System.out.println("Subclasses of \"" + className + "\":");
+
+        for (Node<OWLClass> subClass : subClasses.getNodes()) {
+            System.out.println("  - " + Util.join(subClass.getEntities(), " = "));
         }
-        return subClss.getFlattened();
+
+        return subClasses.getFlattened();
     }
 
     // Lekérdezi egy OWL entitás (osztály, tulajdonság vagy egyed) annotációit
@@ -133,37 +131,39 @@ public class ReasoningExample {
     // ANNOTATION_TYPE_IRI konstans tartalmazza, jelen esetben rdfs:label.
     public Set<String> getClassAnnotations(OWLEntity entity) {
         OWLAnnotationProperty label = factory.getOWLAnnotationProperty(ANNOTATION_TYPE_IRI);
+
         Set<String> result = new HashSet<String>();
-        for (OWLAnnotation a : entity.getAnnotations(ontology, label)) {
-            if (a.getValue() instanceof OWLLiteral) {
-                OWLLiteral value = (OWLLiteral) a.getValue();
+
+        for (OWLAnnotation annotation : entity.getAnnotations(ontology, label)) {
+            if (annotation.getValue() instanceof OWLLiteral) {
+                OWLLiteral value = (OWLLiteral) annotation.getValue();
                 result.add(value.getLiteral());
             }
         }
+
         return Collections.unmodifiableSet(result);
     }
 
-    // Példaprogram: beolvassa a pc-shop OWL ontológiát, majd listázza
-    // az "alkatrész" osztály valamennyi leszármazottját és azok annotációit.
     public static void main(String[] args) {
-        // Példányosítsuk a fenti egyszerű Pellet következtető osztályt.
-        ReasoningExample p = new ReasoningExample(
+        Reasoning reasoning = new Reasoning(
                 PCSHOP_ONTOLOGY_FNAME);
 
         // Végezzük keresőszó-kiegészítést az "alkatrész" kulcsszóra
         // az osztály leszármazottai szerint!
         final String term = "alkatrész";
-        Set<OWLClass> descendants = p.getSubClasses(term, false);
-        System.out.println("Query expansion a leszármazottak szerint: ");
-        for (OWLClass cls : descendants) {
+
+        Set<OWLClass> descendants = reasoning.getSubClasses(term, false);
+        System.out.println("Query expansion by descendants: ");
+
+        for (OWLClass owlClass : descendants) {
             // Az eredmények közül a beépített OWL entitásokat ki kell szűrnünk.
             // Ezek itt az osztályhierarchia tetejét és alját jelölő
             // "owl:Thing" és "owl:Nothing" lehetnek.
-            if (!cls.isBuiltIn()) {
-                // Kérdezzük le az osztály címkéit (annotation rdfs:label).
-                Set<String> labels = p.getClassAnnotations(cls);
+            if (!owlClass.isBuiltIn()) {
+                Set<String> labels = reasoning.getClassAnnotations(owlClass);
+
                 System.out.println("\t- "
-                        + term + " -> " + cls.getIRI().getFragment()
+                        + term + " -> " + owlClass.getIRI().getFragment()
                         + " [" + Util.join(labels, ", ") + "]");
             }
         }
